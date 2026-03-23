@@ -1,16 +1,42 @@
-# bloc_task
+# 🚗 BLoC Vehicle Management System
 
-A new Flutter project.
+A Flutter application that manages different types of vehicles using the BLoC (Business Logic Component) pattern.
 
-## Getting Started
+## 📌 Features
 
-This project is a starting point for a Flutter application.
+- Add vehicles (Car, Truck, Motorcycle)
+- Store and retrieve data using local JSON storage
+- Search vehicles by:
+  - Manufacturer
+  - Plate number
+  - Manufacture date
+- Separation of concerns using:
+  - BLoC for state management
+  - Repository for data handling
+  - Models with JSON serialization
 
-A few resources to get you started if this is your first Flutter project:
+## 🏗️ Architecture
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- BLoC Pattern
+- Repository Pattern
+- Clean separation of UI, logic, and data
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 🧰 Technologies Used
+
+- Flutter
+- Dart
+- flutter_bloc
+- JSON file storage
+
+## 📂 Project Structure
+
+- bloc/
+- models/
+- repository/
+- screens/
+
+## 🚀 Getting Started
+
+```bash
+flutter pub get
+flutter run
