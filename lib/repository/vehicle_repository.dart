@@ -1,38 +1,51 @@
+import 'package:bloc_task/services/vehicle_api_service.dart';
+
+import '../models/motorcycle.dart';
 import '../models/car.dart';
 import '../models/truck.dart';
-import '../models/motorcycle.dart';
-import 'storage_service.dart';
+import '../repository/storage_service.dart';
+
 
 class VehicleRepository {
-  final StorageService storage;
+  final VehicleApiService apiService;
 
+  VehicleRepository({required this.apiService});
+
+  List<Motorcycle> motorcycles = [];
   List<Car> cars = [];
   List<Truck> trucks = [];
-  List<Motorcycle> motorcycles = [];
 
-  VehicleRepository(this.storage);
-
-  Future<void> load() async {
-    final data = await storage.load();
-
-    cars = (data['cars'] ?? [])
-        .map<Car>((e) => Car.fromJson(e))
-        .toList();
-
-    trucks = (data['trucks'] ?? [])
-        .map<Truck>((e) => Truck.fromJson(e))
-        .toList();
-
-    motorcycles = (data['motorcycles'] ?? [])
-        .map<Motorcycle>((e) => Motorcycle.fromJson(e))
-        .toList();
+  Future<void> loadVehicles() async {
+    try {
+      // جلب من API
+      final apiData = await apiService.fetchVehicles();
+      motorcycles = apiData['motorcycles'].map<Motorcycle>((x) => Motorcycle.fromJson(x)).toList();
+      cars = apiData['cars'].map<Car>((x) => Car.fromJson(x)).toList();
+      trucks = apiData['trucks'].map<Truck>((x) => Truck.fromJson(x)).toList();
+      // حفظ نسخة offline
+      await StorageService.saveData('vehicles', {
+        'motorcycles': motorcycles.map((e) => e.toJson()).toList(),
+        'cars': cars.map((e) => e.toJson()).toList(),
+        'trucks': trucks.map((e) => e.toJson()).toList(),
+      });
+    } catch (e) {
+      // fallback offline
+      final localData = await StorageService.loadData('vehicles');
+      if (localData != null) {
+        motorcycles = (localData['motorcycles'] as List)
+            .map((x) => Motorcycle.fromJson(x))
+            .toList();
+        cars = (localData['cars'] as List).map((x) => Car.fromJson(x)).toList();
+        trucks = (localData['trucks'] as List).map((x) => Truck.fromJson(x)).toList();
+      }
+    }
   }
 
-  Future<void> save() async {
-    await storage.save({
+  Future<void> saveVehicles() async {
+    await StorageService.saveData('vehicles', {
+      'motorcycles': motorcycles.map((e) => e.toJson()).toList(),
       'cars': cars.map((e) => e.toJson()).toList(),
       'trucks': trucks.map((e) => e.toJson()).toList(),
-      'motorcycles': motorcycles.map((e) => e.toJson()).toList(),
     });
   }
 }

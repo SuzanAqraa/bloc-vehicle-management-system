@@ -1,4 +1,10 @@
-abstract class SearchEvent {}
+import 'package:equatable/equatable.dart';
+import '../../models/automobile.dart';
+
+abstract class SearchEvent extends Equatable {
+  @override
+  List<Object?> get props => [];
+}
 
 class SearchByCompanyEvent extends SearchEvent {
   final String company;
@@ -11,8 +17,8 @@ class SearchByDateEvent extends SearchEvent {
 }
 
 class SearchByPlateEvent extends SearchEvent {
-  final int plate;
-  SearchByPlateEvent(this.plate);
+  final int plateNum;
+  SearchByPlateEvent(this.plateNum);
 }
 
 class ClearSearchEvent extends SearchEvent {}

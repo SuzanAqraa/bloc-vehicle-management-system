@@ -1,40 +1,77 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../models/car.dart';
-import '../../models/truck.dart';
-import '../../models/motorcycle.dart';
 import '../../repository/vehicle_repository.dart';
+import '../../services/vehicle_api_service.dart';
 import 'vehicle_event.dart';
 import 'vehicle_state.dart';
-
+import '../../models/motorcycle.dart';
+import '../../models/car.dart';
+import '../../models/truck.dart';
 class VehicleBloc extends Bloc<VehicleEvent, VehicleState> {
-  final VehicleRepository repo;
+  final VehicleRepository repository;
+  final VehicleApiService apiService;
 
-  VehicleBloc(this.repo) : super(VehicleInitial()) {
+  VehicleBloc({required this.repository, required this.apiService})
+      : super(VehicleInitial()) {
     on<LoadVehiclesEvent>((event, emit) async {
       emit(VehicleLoading());
-      await repo.load();
-      emit(VehicleLoaded(repo.cars, repo.trucks, repo.motorcycles));
+      try {
+        final motorcycles = await apiService.fetchMotorcycles();
+        final cars = await apiService.fetchCars();
+        final trucks = await apiService.fetchTrucks();
+
+        repository.motorcycles = motorcycles;
+        repository.cars = cars;
+        repository.trucks = trucks;
+
+        emit(VehicleLoaded(
+          motorcycles: motorcycles,
+          cars: cars,
+          trucks: trucks,
+        ));
+      } catch (e) {
+        emit(VehicleError("Failed to load vehicles: $e"));
+      }
     });
 
-    on<AddVehicleEvent>((event, emit) {
-      if (event.vehicle is Car) repo.cars.add(event.vehicle as Car);
-      if (event.vehicle is Truck) repo.trucks.add(event.vehicle as Truck);
-      if (event.vehicle is Motorcycle)
-        repo.motorcycles.add(event.vehicle as Motorcycle);
+    on<AddVehicleEvent>((event, emit) async {
+      try {
+        final type = event.vehicle.type.name.toLowerCase(); // ✅ تم تعديل هنا
+        await apiService.addVehicle(event.vehicle.toJson(), type);
 
-      emit(VehicleLoaded(repo.cars, repo.trucks, repo.motorcycles));
+        if (type == "motorcycle") repository.motorcycles.add(event.vehicle as Motorcycle);
+        if (type == "car") repository.cars.add(event.vehicle as Car);
+        if (type == "truck") repository.trucks.add(event.vehicle as Truck);
+
+        emit(VehicleLoaded(
+          motorcycles: repository.motorcycles,
+          cars: repository.cars,
+          trucks: repository.trucks,
+        ));
+      } catch (e) {
+        emit(VehicleError("Failed to add vehicle: $e"));
+      }
     });
 
-    on<DeleteVehicleEvent>((event, emit) {
-      repo.cars.removeWhere((e) => e.plateNum == event.plateNum);
-      repo.trucks.removeWhere((e) => e.plateNum == event.plateNum);
-      repo.motorcycles.removeWhere((e) => e.plateNum == event.plateNum);
+    on<DeleteVehicleEvent>((event, emit) async {
+      try {
+        await apiService.deleteVehicle(event.plateNum, event.type.toLowerCase());
 
-      emit(VehicleLoaded(repo.cars, repo.trucks, repo.motorcycles));
-    });
+        if (event.type == "Motorcycle") {
+          repository.motorcycles.removeWhere((v) => v.plateNum == event.plateNum);
+        } else if (event.type == "Car") {
+          repository.cars.removeWhere((v) => v.plateNum == event.plateNum);
+        } else if (event.type == "Truck") {
+          repository.trucks.removeWhere((v) => v.plateNum == event.plateNum);
+        }
 
-    on<SaveVehiclesEvent>((event, emit) async {
-      await repo.save();
+        emit(VehicleLoaded(
+          motorcycles: repository.motorcycles,
+          cars: repository.cars,
+          trucks: repository.trucks,
+        ));
+      } catch (e) {
+        emit(VehicleError("Failed to delete vehicle: $e"));
+      }
     });
   }
 }

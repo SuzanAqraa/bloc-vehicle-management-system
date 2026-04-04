@@ -3,39 +3,47 @@ import 'engine.dart';
 import 'enums.dart';
 
 class Motorcycle extends Automobile {
-  double tierDiameter;
-  double length;
+  double _tierDiameter;
+  double _length;
 
   Motorcycle(
-      super.manufactureCompany,
-      super.manufactureDate,
-      super.model,
-      super.engine,
-      super.plateNum,
-      super.gearType,
-      super.bodySerialNum,
-      this.tierDiameter,
-      this.length,
-      );
+      String manufactureCompany,
+      DateTime manufactureDate,
+      String model,
+      Engine engine,
+      int plateNum,
+      GearType gearType,
+      int bodySerialNum,
+      this._tierDiameter,
+      this._length,
+      ) : super(manufactureCompany, manufactureDate, model, engine, plateNum,
+      gearType, bodySerialNum);
+
+  double get tierDiameter => _tierDiameter;
+  set tierDiameter(double val) => _tierDiameter = val;
+
+  double get length => _length;
+  set length(double val) => _length = val;
+
+  @override
+  VehicleType get type => VehicleType.motorcycle;
 
   Map<String, dynamic> toJson() => {
-    ...baseJson(),
-    'type': 'motorcycle',
-    'tierDiameter': tierDiameter,
-    'length': length,
+    ...super.toJson(),
+    'tierDiameter': _tierDiameter,
+    'length': _length,
   };
 
-  factory Motorcycle.fromJson(Map<String, dynamic> json) {
-    return Motorcycle(
-      json['manufactureCompany'],
-      DateTime.parse(json['manufactureDate']),
-      json['model'],
-      Engine.fromJson(json['engine']),
-      json['plateNum'],
-      GearType.values.firstWhere((e) => e.name == json['gearType']),
-      json['bodySerialNum'],
-      (json['tierDiameter']).toDouble(),
-      (json['length']).toDouble(),
-    );
-  }
+  factory Motorcycle.fromJson(Map<String, dynamic> json) => Motorcycle(
+    json['manufactureCompany'],
+    DateTime.parse(json['manufactureDate']),
+    json['model'],
+    Engine.fromJson(json['engine']),
+    json['plateNum'],
+    GearType.values.firstWhere(
+            (e) => e.toString().split('.').last == json['gearType']),
+    json['bodySerialNum'],
+    json['tierDiameter'].toDouble(),
+    json['length'].toDouble(),
+  );
 }
