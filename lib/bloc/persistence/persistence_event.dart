@@ -1,9 +1,5 @@
-import 'package:equatable/equatable.dart';
+abstract class PersistenceEvent {}
 
-abstract class PersistenceEvent extends Equatable {
-  @override
-  List<Object?> get props => [];
-}
+class LoadCacheEvent extends PersistenceEvent {}
 
-class PersistLoadEvent extends PersistenceEvent {}
-class PersistSaveEvent extends PersistenceEvent {}
+class SaveCacheEvent extends PersistenceEvent {}

@@ -1,55 +1,58 @@
-import 'vehicle.dart';
+import '../helpers/helpers.dart';
+import 'automobile.dart';
 import 'engine.dart';
 import 'enums.dart';
 
-class Car extends Vehicle {
-  int _chairNum;
-  bool _isFurnitureLeather;
+class Car extends Automobile {
+  final int chairNum;
+  final bool isFurnitureLeather;
+  final double length;
+  final double width;
+  final String color;
 
-  Car(
-      String manufactureCompany,
-      DateTime manufactureDate,
-      String model,
-      Engine engine,
-      int plateNum,
-      GearType gearType,
-      int bodySerialNum,
-      int length,
-      int width,
-      String color,
-      this._chairNum,
-      this._isFurnitureLeather)
-      : super(manufactureCompany, manufactureDate, model, engine, plateNum,
-      gearType, bodySerialNum, length, width, color);
-
-  int get chairNum => _chairNum;
-  set chairNum(int val) => _chairNum = val;
-
-  bool get isFurnitureLeather => _isFurnitureLeather;
-  set isFurnitureLeather(bool val) => _isFurnitureLeather = val;
+  Car({
+    required super.manufactureCompany,
+    required super.manufactureDate,
+    required super.model,
+    required super.engine,
+    required super.plateNum,
+    required super.gearType,
+    required super.bodySerialNum,
+    required this.chairNum,
+    required this.isFurnitureLeather,
+    required this.length,
+    required this.width,
+    required this.color,
+  });
 
   @override
   VehicleType get type => VehicleType.car;
 
+  factory Car.fromJson(Map<String, dynamic> json) {
+    return Car(
+      manufactureCompany: json['manufactureCompany'] ?? '',
+      manufactureDate:
+      DateTime.tryParse(json['manufactureDate'] ?? '') ?? DateTime.now(),
+      model: json['model'] ?? '',
+      engine: Engine.fromJson(json['engine'] ?? {}),
+      plateNum: (json['plateNum'] ?? 0).toInt(),
+      gearType: parseGearType(json['gearType']),
+      bodySerialNum: (json['bodySerialNum'] ?? 0).toInt(),
+      chairNum: (json['chairNum'] ?? 0).toInt(),
+      isFurnitureLeather: json['isFurnitureLeather'] ?? false,
+      length: (json['length'] ?? 0).toDouble(),
+      width: (json['width'] ?? 0).toDouble(),
+      color: json['color'] ?? '',
+    );
+  }
+
+  @override
   Map<String, dynamic> toJson() => {
     ...super.toJson(),
-    'chairNum': _chairNum,
-    'isFurnitureLeather': _isFurnitureLeather,
+    'chairNum': chairNum,
+    'isFurnitureLeather': isFurnitureLeather,
+    'length': length,
+    'width': width,
+    'color': color,
   };
-
-  factory Car.fromJson(Map<String, dynamic> json) => Car(
-    json['manufactureCompany'],
-    DateTime.parse(json['manufactureDate']),
-    json['model'],
-    Engine.fromJson(json['engine']),
-    json['plateNum'],
-    GearType.values.firstWhere(
-            (e) => e.toString().split('.').last == json['gearType']),
-    json['bodySerialNum'],
-    json['length'],
-    json['width'],
-    json['color'],
-    json['chairNum'],
-    json['isFurnitureLeather'],
-  );
 }

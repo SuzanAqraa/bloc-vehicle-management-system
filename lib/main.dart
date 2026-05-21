@@ -1,43 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'services/vehicle_api_service.dart';
+import 'repository/vehicle_repository.dart';
 import 'bloc/vehicle/vehicle_bloc.dart';
 import 'bloc/vehicle/vehicle_event.dart';
-import 'bloc/search/search_bloc.dart';
-import 'bloc/persistence/persistence_bloc.dart';
+import 'ui/dashboard_page.dart';
 
-import 'repository/vehicle_repository.dart';
-import 'repository/storage_service.dart';
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-import 'screens/home_screen.dart';
+  final repo = VehicleRepository(VehicleApiService());
 
-void main() {
-  final storage = StorageService();
-  final repo = VehicleRepository(storage);
-
-  runApp(
-    MultiBlocProvider(
-      providers: [
-        BlocProvider(
-          create: (_) => VehicleBloc(repo)..add(LoadVehiclesEvent()),
-        ),
-        BlocProvider(
-          create: (_) => SearchBloc(repo),
-        ),
-        BlocProvider(
-          create: (_) => PersistenceBloc(repo),
-        ),
-      ],
-      child: MyApp(),
-    ),
-  );
+  runApp(MyApp(repo));
 }
 
 class MyApp extends StatelessWidget {
+  final VehicleRepository repo;
+
+  const MyApp(this.repo, {super.key});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: HomeScreen(),
+    return BlocProvider(
+      create: (_) => VehicleBloc(repo)..add(LoadVehiclesEvent()),
+      child: const MaterialApp(
+        home: DashboardPage(),
+      ),
     );
   }
 }

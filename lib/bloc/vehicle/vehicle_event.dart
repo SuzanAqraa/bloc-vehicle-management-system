@@ -1,26 +1,24 @@
-import 'package:equatable/equatable.dart';
-import '../../models/vehicle.dart';
+// vehicle_event.dart
+import '../../models/car.dart';
+import '../../models/truck.dart';
+import '../../models/motorcycle.dart';
 
-abstract class VehicleEvent extends Equatable {
-  @override
-  List<Object?> get props => [];
-}
+abstract class VehicleEvent {}
 
 class LoadVehiclesEvent extends VehicleEvent {}
 
-class AddVehicleEvent extends VehicleEvent {
-  final Vehicle vehicle;
-  AddVehicleEvent(this.vehicle);
-
-  @override
-  List<Object?> get props => [vehicle];
+// Use a sealed/union approach or separate typed events:
+class AddCarEvent extends VehicleEvent {
+  final Car car;
+  AddCarEvent(this.car);
 }
 
-class DeleteVehicleEvent extends VehicleEvent {
-  final int plateNum;
-  final String type;
-  DeleteVehicleEvent({required this.plateNum, required this.type});
+class AddTruckEvent extends VehicleEvent {
+  final Truck truck;
+  AddTruckEvent(this.truck);
+}
 
-  @override
-  List<Object?> get props => [plateNum, type];
+class AddMotorcycleEvent extends VehicleEvent {
+  final Motorcycle motorcycle;
+  AddMotorcycleEvent(this.motorcycle);
 }

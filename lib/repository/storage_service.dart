@@ -3,31 +3,19 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
 class StorageService {
-  static Future<String> get _localPath async {
-    final directory = await getApplicationDocumentsDirectory();
-    return directory.path;
+  Future<File> _file() async {
+    final dir = await getApplicationDocumentsDirectory();
+    return File('${dir.path}/vehicles.json');
   }
 
-  static Future<File> _localFile(String fileName) async {
-    final path = await _localPath;
-    return File('$path/$fileName.json');
-  }
-
-  static Future<void> saveData(String fileName, Map<String, dynamic> data) async {
-    final file = await _localFile(fileName);
+  Future<void> save(Map<String, dynamic> data) async {
+    final file = await _file();
     await file.writeAsString(jsonEncode(data));
   }
 
-  static Future<Map<String, dynamic>?> loadData(String fileName) async {
-    try {
-      final file = await _localFile(fileName);
-      if (await file.exists()) {
-        final content = await file.readAsString();
-        return jsonDecode(content);
-      }
-      return null;
-    } catch (e) {
-      return null;
-    }
+  Future<Map<String, dynamic>> load() async {
+    final file = await _file();
+    if (!await file.exists()) return {};
+    return jsonDecode(await file.readAsString());
   }
 }

@@ -1,77 +1,80 @@
+// vehicle_bloc.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../repository/vehicle_repository.dart';
-import '../../services/vehicle_api_service.dart';
 import 'vehicle_event.dart';
 import 'vehicle_state.dart';
-import '../../models/motorcycle.dart';
-import '../../models/car.dart';
-import '../../models/truck.dart';
+import '../../repository/vehicle_repository.dart';
+
 class VehicleBloc extends Bloc<VehicleEvent, VehicleState> {
-  final VehicleRepository repository;
-  final VehicleApiService apiService;
+  final VehicleRepository repo;
 
-  VehicleBloc({required this.repository, required this.apiService})
-      : super(VehicleInitial()) {
-    on<LoadVehiclesEvent>((event, emit) async {
-      emit(VehicleLoading());
-      try {
-        final motorcycles = await apiService.fetchMotorcycles();
-        final cars = await apiService.fetchCars();
-        final trucks = await apiService.fetchTrucks();
+  VehicleBloc(this.repo) : super(VehicleInitial()) {
+    on<LoadVehiclesEvent>(_onLoad);
+    on<AddCarEvent>(_onAddCar);
+    on<AddTruckEvent>(_onAddTruck);
+    on<AddMotorcycleEvent>(_onAddMotorcycle);
+  }
 
-        repository.motorcycles = motorcycles;
-        repository.cars = cars;
-        repository.trucks = trucks;
+  Future<void> _onLoad(
+      LoadVehiclesEvent event,
+      Emitter<VehicleState> emit,
+      ) async {
+    emit(VehicleLoading());
+    try {
+      await repo.load();
+      _emitLoaded(emit);
+    } catch (e) {
+      emit(VehicleError("Failed to load vehicles: $e"));
+    }
+  }
 
-        emit(VehicleLoaded(
-          motorcycles: motorcycles,
-          cars: cars,
-          trucks: trucks,
-        ));
-      } catch (e) {
-        emit(VehicleError("Failed to load vehicles: $e"));
-      }
-    });
+  Future<void> _onAddCar(
+      AddCarEvent event,
+      Emitter<VehicleState> emit,
+      ) async {
+    // Preserve current state so UI doesn't flash on error
+    final previous = state;
+    try {
+      await repo.addCar(event.car);
+      _emitLoaded(emit); // repo lists are updated after add
+    } catch (e) {
+      emit(VehicleError("Failed to add car: $e"));
+      emit(previous); // restore previous state
+    }
+  }
 
-    on<AddVehicleEvent>((event, emit) async {
-      try {
-        final type = event.vehicle.type.name.toLowerCase(); // ✅ تم تعديل هنا
-        await apiService.addVehicle(event.vehicle.toJson(), type);
+  Future<void> _onAddTruck(
+      AddTruckEvent event,
+      Emitter<VehicleState> emit,
+      ) async {
+    final previous = state;
+    try {
+      await repo.addTruck(event.truck);
+      _emitLoaded(emit);
+    } catch (e) {
+      emit(VehicleError("Failed to add truck: $e"));
+      emit(previous);
+    }
+  }
 
-        if (type == "motorcycle") repository.motorcycles.add(event.vehicle as Motorcycle);
-        if (type == "car") repository.cars.add(event.vehicle as Car);
-        if (type == "truck") repository.trucks.add(event.vehicle as Truck);
+  Future<void> _onAddMotorcycle(
+      AddMotorcycleEvent event,
+      Emitter<VehicleState> emit,
+      ) async {
+    final previous = state;
+    try {
+      await repo.addMotorcycle(event.motorcycle);
+      _emitLoaded(emit);
+    } catch (e) {
+      emit(VehicleError("Failed to add motorcycle: $e"));
+      emit(previous);
+    }
+  }
 
-        emit(VehicleLoaded(
-          motorcycles: repository.motorcycles,
-          cars: repository.cars,
-          trucks: repository.trucks,
-        ));
-      } catch (e) {
-        emit(VehicleError("Failed to add vehicle: $e"));
-      }
-    });
-
-    on<DeleteVehicleEvent>((event, emit) async {
-      try {
-        await apiService.deleteVehicle(event.plateNum, event.type.toLowerCase());
-
-        if (event.type == "Motorcycle") {
-          repository.motorcycles.removeWhere((v) => v.plateNum == event.plateNum);
-        } else if (event.type == "Car") {
-          repository.cars.removeWhere((v) => v.plateNum == event.plateNum);
-        } else if (event.type == "Truck") {
-          repository.trucks.removeWhere((v) => v.plateNum == event.plateNum);
-        }
-
-        emit(VehicleLoaded(
-          motorcycles: repository.motorcycles,
-          cars: repository.cars,
-          trucks: repository.trucks,
-        ));
-      } catch (e) {
-        emit(VehicleError("Failed to delete vehicle: $e"));
-      }
-    });
+  void _emitLoaded(Emitter<VehicleState> emit) {
+    emit(VehicleLoaded(
+      List.unmodifiable(repo.cars),
+      List.unmodifiable(repo.trucks),
+      List.unmodifiable(repo.motorcycles),
+    ));
   }
 }

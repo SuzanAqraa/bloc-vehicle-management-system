@@ -1,16 +1,16 @@
-import 'package:equatable/equatable.dart';
 import '../../models/automobile.dart';
 
-abstract class SearchState extends Equatable {
-  @override
-  List<Object?> get props => [];
-}
+abstract class SearchState {}
 
+// 🟡 initial state
 class SearchInitial extends SearchState {}
+
+// 🔵 results found
 class SearchResults extends SearchState {
   final List<Automobile> results;
+
   SearchResults(this.results);
-  @override
-  List<Object?> get props => [results];
 }
+
+// ⚪ no results
 class SearchEmpty extends SearchState {}

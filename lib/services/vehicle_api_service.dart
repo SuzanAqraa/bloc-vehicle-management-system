@@ -1,41 +1,49 @@
 import 'package:dio/dio.dart';
-import '../models/motorcycle.dart';
-import '../models/car.dart';
-import '../models/truck.dart';
 
 class VehicleApiService {
-  final Dio dio;
+  final Dio dio = Dio(
+    BaseOptions(
 
-  VehicleApiService({required this.dio});
+      baseUrl: "https://69e5fc60ce4e908a155ebf41.mockapi.io",
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+    ),
+  );
 
-  Future<List<Motorcycle>> fetchMotorcycles() async {
-    final response = await dio.get('/motorcycles');
-    return (response.data as List)
-        .map((json) => Motorcycle.fromJson(json))
-        .toList();
+  // 📥 GET all vehicles
+  Future<List<dynamic>> getVehicles() async {
+    try {
+      final res = await dio.get("/vehicles");
+      return res.data;
+    } on DioException catch (e) {
+      throw Exception("GET error: ${e.message}");
+    }
   }
 
-  Future<List<Car>> fetchCars() async {
-    final response = await dio.get('/cars');
-    return (response.data as List).map((json) => Car.fromJson(json)).toList();
+  // ➕ ADD vehicle
+  Future<void> addVehicle(Map<String, dynamic> data) async {
+    try {
+      await dio.post("/vehicles", data: data);
+    } on DioException catch (e) {
+      throw Exception("POST error: ${e.message}");
+    }
   }
 
-  Future<List<Truck>> fetchTrucks() async {
-    final response = await dio.get('/trucks');
-    return (response.data as List)
-        .map((json) => Truck.fromJson(json))
-        .toList();
+  // ✏️ UPDATE vehicle
+  Future<void> updateVehicle(String id, Map<String, dynamic> data) async {
+    try {
+      await dio.put("/vehicles/$id", data: data);
+    } on DioException catch (e) {
+      throw Exception("PUT error: ${e.message}");
+    }
   }
 
-  Future<void> addVehicle(Map<String, dynamic> json, String type) async {
-    await dio.post('/$type', data: json);
-  }
-
-  Future<void> updateVehicle(int id, Map<String, dynamic> json, String type) async {
-    await dio.put('/$type/$id', data: json);
-  }
-
-  Future<void> deleteVehicle(int id, String type) async {
-    await dio.delete('/$type/$id');
+  // ❌ DELETE vehicle
+  Future<void> deleteVehicle(String id) async {
+    try {
+      await dio.delete("/vehicles/$id");
+    } on DioException catch (e) {
+      throw Exception("DELETE error: ${e.message}");
+    }
   }
 }
